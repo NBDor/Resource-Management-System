@@ -1,8 +1,7 @@
 from config.redis_keys import (
     get_users_queries_key,
-    get_agent_config_key,
-    get_agent_matching_details_key,
-    get_agent_url_key,
+    get_harvester_config_key,
+    get_harvester_matching_details_key,
 )
 from config.settings import app_settings
 from models import Base
@@ -14,16 +13,16 @@ import pickle
 from log.logger import logger as logging
 
 
-async def get_user_agents_by_user_uid(user_uid: str) -> list:
+async def get_user_harvesters_by_user_uid(user_uid: str) -> list:
     user_queries_dict = await get_users_query_dict(user_uid)
-    return user_queries_dict["user_agents"]
+    return user_queries_dict["user_harvesters"]
 
 
-async def get_query_by_user_agents(
+async def get_query_by_user_harvesters(
     user_uid: str, base_query: Session.query, db_model: Base
 ) -> Session.query:
-    agent_uids = await get_user_agents_by_user_uid(user_uid)
-    return base_query.filter(db_model.agent_uid.in_(agent_uids))
+    harvester_uids = await get_user_harvesters_by_user_uid(user_uid)
+    return base_query.filter(db_model.harvester_uid.in_(harvester_uids))
 
 
 async def get_users_query_dict(user_uid) -> dict:
@@ -42,55 +41,40 @@ async def get_users_query_dict(user_uid) -> dict:
     return user_queries_dict
 
 
-def get_agent_details_by_agent_uid(agent_uid: str) -> str:
-    agent_key = get_agent_matching_details_key(agent_uid)
+def get_harvester_details_by_harvester_uid(harvester_uid: str) -> str:
+    harvester_key = get_harvester_matching_details_key(harvester_uid)
     redis = Redis(host=app_settings.REDIS_HOST, port=app_settings.REDIS_PORT)
     redis.select(app_settings.REDIS_DB_INDEX)
-    cache_dict = redis.get(agent_key)
+    cache_dict = redis.get(harvester_key)
     redis.close()
 
     device_matching_settings = (
         cache_dict
         if cache_dict
-        else get_info_from_mgmt_by_agent_uid(agent_uid, "agent-related-info")
+        else get_info_from_mgmt_by_harvester_uid(harvester_uid, "harvester-related-info")
     )
 
     return device_matching_settings
 
 
-async def get_agent_configuration(agent_uid: str) -> Union[dict, None]:
-    agent_config_key = get_agent_config_key(agent_uid)
+async def get_harvester_configuration(harvester_uid: str) -> Union[dict, None]:
+    harvester_config_key = get_harvester_config_key(harvester_uid)
     redis = Redis(host=app_settings.REDIS_HOST, port=app_settings.REDIS_PORT)
     redis.select(app_settings.REDIS_DB_INDEX)
-    cached_configuration = redis.get(agent_config_key)
+    cached_configuration = redis.get(harvester_config_key)
     redis.close()
 
-    agent_config = (
+    harvester_config = (
         cached_configuration
         if cached_configuration is not None
-        else get_info_from_mgmt_by_agent_uid(agent_uid, "agent-configuration")
+        else get_info_from_mgmt_by_harvester_uid(harvester_uid, "harvester-configuration")
     )
-    return agent_config
-
-
-async def get_agent_alert_url(agent_uid: str) -> str:
-    agent_url_key = get_agent_url_key(agent_uid)
-    redis = Redis(host=app_settings.REDIS_HOST, port=app_settings.REDIS_PORT)
-    redis.select(app_settings.REDIS_DB_INDEX)
-    cached_agent_url = redis.get(agent_url_key)
-    redis.close()
-
-    agent_alert_url = (
-        cached_agent_url
-        if cached_agent_url is not None
-        else get_info_from_mgmt_by_agent_uid(agent_uid, "agent-alerts-url")
-    )
-    return agent_alert_url["agent_alerts_url"]
+    return harvester_config
 
 
 async def get_dict_from_mgmt(user_uid: str, mgmt_action: str) -> Optional[str]:
     """
-    This method asks the management service for the related agent's information.
+    This method asks the management service for the related harvester's information.
     """
     url = f"http://{app_settings.MGMT_SERVICE_HOST}:{app_settings.MGMT_SERVICE_PORT}/api/v1/{mgmt_action}/{user_uid}"
     response = requests.get(url=url)
@@ -103,31 +87,31 @@ async def get_dict_from_mgmt(user_uid: str, mgmt_action: str) -> Optional[str]:
         return response.json()
 
 
-def get_info_from_mgmt_by_agent_uid(agent_uid: str, mgmt_action: str) -> Optional[str]:
+def get_info_from_mgmt_by_harvester_uid(harvester_uid: str, mgmt_action: str) -> Optional[str]:
     """
-    This method asks the management service for the related agent's information.
+    This method asks the management service for the related harvester's information.
     """
-    url = f"http://{app_settings.MGMT_SERVICE_HOST}:{app_settings.MGMT_SERVICE_PORT}/api/v1/{mgmt_action}/{agent_uid}"
+    url = f"http://{app_settings.MGMT_SERVICE_HOST}:{app_settings.MGMT_SERVICE_PORT}/api/v1/{mgmt_action}/{harvester_uid}"
     response = requests.get(url=url)
     if response.status_code != 200:
         logging.error(
-            f"[MGMT REQUEST] Failed to get agent | Agent UID: {agent_uid} | Response: {response.status_code}"
+            f"[MGMT REQUEST] Failed to get harvester | harvester UID: {harvester_uid} | Response: {response.status_code}"
         )
-        raise Exception(f"Failed to get agent | Agent UID: {agent_uid}")
+        raise Exception(f"Failed to get harvester | harvester UID: {harvester_uid}")
     else:
         return response.json()
 
 
-def get_info_from_mgmt_by_agents_group_id(agents_group_id: str, mgmt_action: str) -> Optional[str]:
+def get_info_from_mgmt_by_project_id(project_id: str, mgmt_action: str) -> Optional[str]:
     """
-    This method asks the management service for the related agents group's information.
+    This method asks the management service for the related project's information.
     """
-    url = f"http://{app_settings.MGMT_SERVICE_HOST}:{app_settings.MGMT_SERVICE_PORT}/api/v1/{mgmt_action}/{agents_group_id}"
+    url = f"http://{app_settings.MGMT_SERVICE_HOST}:{app_settings.MGMT_SERVICE_PORT}/api/v1/{mgmt_action}/{project_id}"
     response = requests.get(url=url)
     if response.status_code != 200:
         logging.error(
-            f"[MGMT REQUEST] Failed to get agent group | Agent Group ID: {agents_group_id} | Response: {response.status_code}"
+            f"[MGMT REQUEST] Failed to get project | Project ID: {project_id} | Response: {response.status_code}"
         )
-        raise Exception(f"Failed to get agent group | Agent Group ID: {agents_group_id}")
+        raise Exception(f"Failed to get project | Project ID: {project_id}")
     else:
         return response.json()
