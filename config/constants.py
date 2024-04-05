@@ -11,28 +11,21 @@ ROLE = "role"
 
 EARLIEST_DATE = "2000-01-01T10:10:10Z"
 
-# agent brands:
-COMET_BRAND = "comet"
-COMET_PRO_BRAND = "comet-pro"
-METEOR_BRAND = "meteor"
+# harvester brands:
+HC = "Herba-Cutter"
+TG = "Terra-Gather"
+PH = "Phyto-Harvest"
 
-# traffic logic
-GPS_TRAFFIC_LOGIC = "gps_traffic_flag"
-
-# license plate recognition
-REKOR_PLATE_RECOGNITION = "alpr_group"
-REKOR_HEARTBEAT = "heartbeat"
+# HerbTech Harvesting
+HERBTECH_HARVESTER = "harvest"
+HERBTECH_HEARTBEAT = "keep_alive"
 DATA_TYPE = "data_type"
-AGENT_UID = "agent_uid"
-CAMERA_ID = "camera_id"
-USER_DATA = "user_data"
-
-# external services
-ENABLED = "enabled"
+HARVESTER_UID = "harvester_uid"
+EQUIPMENT_ID = "equipment_id"
 
 # default values
-DEFAULT_MIN_PLATE_LEN = 4
+DEFAULT_MIN_CHEMICAL_ANALYSIS_VALUE = 70.0
 DATA_CACHE_EXPIRATION = 1800
 
-# License Plate Classification
-CLASSIFY_NEW_PLATE = "Classify_New_Plate"
+# Herb Classification
+CLASSIFY_PROCESSED_HERB = "Classify_Processed_Herb"

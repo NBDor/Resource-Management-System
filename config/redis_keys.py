@@ -5,25 +5,21 @@ def get_users_queries_key(user_uid: int) -> str:
     return f"users:{user_uid}:information"
 
 
-def get_client_uuid_by_agents_group_key(agents_group_id: str) -> str:
-    return f"agents_group:{agents_group_id}:client"
+def get_company_uuid_by_project_key(project_id: str) -> str:
+    return f"project:{project_id}:company"
 
 
-def get_agent_config_key(agent_uid: str) -> str:
-    return f"agent:{agent_uid}:configuration"
+def get_harvester_config_key(harvester_uid: str) -> str:
+    return f"harvester:{harvester_uid}:configuration"
 
 
-def get_gps_key(agent_uid: str) -> str:
-    return f"agent:{agent_uid}:{GPS_TRAFFIC_LOGIC}"
+def get_gps_key(harvester_uid: str) -> str:
+    return f"harvester:{harvester_uid}:{GPS_TRAFFIC_LOGIC}"
 
 
-def get_agent_matching_details_key(agent_uid: str) -> str:
-    return f"agent:{agent_uid}:payload:details"
+def get_harvester_matching_details_key(harvester_uid: str) -> str:
+    return f"harvester:{harvester_uid}:payload:details"
 
 
-def get_agent_url_key(agent_uid: str) -> str:
-    return f"agent:{agent_uid}:alerts_url"
-
-
-def get_camera_key(agent_uid: str, camera_id: str) -> str:
-    return f"agent:{agent_uid}:lp_camera:{camera_id}"
+def get_equipment_key(harvester_uid: str, equipment_id: str) -> str:
+    return f"harvester:{harvester_uid}:equipment:{equipment_id}"

@@ -12,8 +12,8 @@ class BaseConfig:
     worker_prefetch_multiplier = 1
     broker_transport_options = {'confirm_publish': True}
     task_routes = {
-        "celery_tasks.license_plate_tasks.classify_new_plate": {
-            "queue": "lp.license_plate.classify"
+        "celery_tasks.herb_tasks.classify_processed_herb": {
+            "queue": "rms.herb.classification"
         },
     }
 
