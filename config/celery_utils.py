@@ -4,7 +4,7 @@ from .celery_config import celery_settings
 
 
 def create_celery():
-    celery_app = Celery('CHAT')
+    celery_app = Celery('RMS')
     celery_app.config_from_object(celery_settings, namespace='CELERY')
     celery_app.conf.update(task_track_started=True)
     celery_app.conf.update(task_serializer='json')

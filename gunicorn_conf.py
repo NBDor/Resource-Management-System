@@ -1,6 +1,6 @@
 import os
 
-name = os.getenv("GUNICORN_NAME", "polaris-fast-lp-backend")
+name = os.getenv("GUNICORN_NAME", "RMS-backend")
 workers = os.getenv("GUNICORN_WORKERS", 2)
 threads = os.getenv("GUNICORN_THREADS", 4)
 loglevel = os.getenv("LOG_LEVEL", "INFO")

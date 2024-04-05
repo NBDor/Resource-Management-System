@@ -6,4 +6,4 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
 )
 
-logger = logging.getLogger("polaris-rk")
+logger = logging.getLogger("rms")
