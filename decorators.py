@@ -3,10 +3,10 @@ import logging
 import time
 from models import Base
 from integrations.mgmt_actions import (
-    get_query_by_user_agents,
-    get_user_agents_by_user_uid,
+    get_query_by_user_harvesters,
+    get_user_harvesters_by_user_uid,
 )
-from config.constants import IS_SUPERUSER
+from config.constants import IS_SUPERUSER, USER_UID
 
 
 def base_query_factory(db_model: Base) -> None:
@@ -23,8 +23,8 @@ def base_query_factory(db_model: Base) -> None:
 
             self.base_query = db.query(db_model)
             if not token[IS_SUPERUSER]:
-                self.base_query = get_query_by_user_agents(
-                    token["user_uid"], self.base_query, db_model
+                self.base_query = get_query_by_user_harvesters(
+                    token[USER_UID], self.base_query, db_model
                 )
 
             value = func(self, *args, **kwargs)
@@ -36,16 +36,16 @@ def base_query_factory(db_model: Base) -> None:
     return decorator
 
 
-def user_agents_factory(func):
+def user_harvesters_factory(func):
     @functools.wraps(func)
     def wrapper_decorator(self, *args, **kwargs):
         token = kwargs.get("token", None)
         if not token:
             token = args[2]
 
-        self.user_agents = []
+        self.user_harvesters = []
         if not token[IS_SUPERUSER]:
-            self.user_agents = get_user_agents_by_user_uid(token["user_uid"])
+            self.user_harvesters = get_user_harvesters_by_user_uid(token[USER_UID])
         value = func(self, *args, **kwargs)
 
         return value
