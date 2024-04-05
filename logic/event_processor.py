@@ -1,25 +1,26 @@
-from fastapi import Request
+from fastapi import HTTPException, status, Request
 from config.constants import (
-    REKOR_PLATE_RECOGNITION,
-    REKOR_HEARTBEAT,
+    HERBTECH_HARVESTER,
+    HERBTECH_HEARTBEAT,
     DATA_TYPE,
-    AGENT_UID,
+    HARVESTER_UID,
 )
 from integrations.mgmt_actions import (
-    get_agent_configuration,
-    get_agent_details_by_agent_uid,
+    get_harvester_configuration,
+    get_harvester_details_by_harvester_uid,
 )
-from logic.rekor_dataclasses import RekorALPR
-from logic.license_plate_recognition.lp_recognizer import LicensePlateRecognizer
-from logic.license_plate_recognition.rekor_recognizer import RekorRecognizer
+from log import logger
+from logic.dataclasses import HerbTechHarvest
+from logic.herb_processing.abstract_processor import AbstractProcessor
+from logic.herb_processing.herb_tech_processor import HerbTechProcessor
 from sqlalchemy.orm import Session
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 
 
 class EventProcessor:
     def __init__(self):
         self.data_type: Optional[str] = None
-        self.agent_uid: Optional[str] = None
+        self.harvester_uid: Optional[str] = None
         self.event_obj: Any = None
 
     async def process_request(
@@ -30,35 +31,36 @@ class EventProcessor:
     ) -> dict:
         payload = await request.json()
         self.data_type = payload.get(DATA_TYPE)
-        self.agent_uid = payload.get(AGENT_UID)
-        self.check_essential_request_data()
+        self.harvester_uid = payload.get(HARVESTER_UID)
+        self.check_essential_request_data(self.data_type, self.harvester_uid)
 
-        if self.data_type == REKOR_PLATE_RECOGNITION:
-            agent_info_dict = await self.get_agent_data()
-            self.event_obj = RekorALPR(**{**payload, **agent_info_dict})
-            await self.process_license_plate(RekorRecognizer(self.event_obj, db, token_payload))
+        if self.data_type == HERBTECH_HARVESTER:
+            harvester_info_dict = await self.get_harvester_data()
+            self.event_obj = HerbTechHarvest(**{**payload, **harvester_info_dict})
+            await self.process_herb(HerbTechProcessor(self.event_obj, db, token_payload))
 
-        elif self.data_type == REKOR_HEARTBEAT:
+        elif self.data_type == HERBTECH_HEARTBEAT:
             pass
 
         else:
-            pass
+            warning_message = f"Unknown data type: {self.data_type}"
+            logger.warning(warning_message)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=warning_message,
+            )
 
-        return {"message": f"Polaris system | {self.data_type.upper()} was accepted successfully"}
+        return {"message": f"RMS system | {self.data_type.upper()} was accepted successfully"}
 
-    def check_essential_request_data(self) -> None:
-        if self.data_type is None:
-            raise ValueError("Request was sent with no data_type")
+    def check_essential_request_data(**kwargs) -> None:
+        for key, value in kwargs.items():
+            if value is None:
+                raise ValueError(f"Request was sent with no {key}")
 
-        if self.agent_uid is None:
-            raise ValueError("Request was sent with no agent_uid")
+    async def get_harvester_data(self) -> Dict[str, Any]:
+        harvester_configuration = await get_harvester_configuration(self.harvester_uid)
+        harvester_info_dict = get_harvester_details_by_harvester_uid(self.harvester_uid)
+        return {**harvester_configuration, **harvester_info_dict}
 
-    async def get_agent_data(self) -> Dict[str, Any]:
-        # TODO: combine all the cache/mgmt requests to one endpoint that will provide all the data (MGMT support needed)
-        agent_configuration = await get_agent_configuration(self.agent_uid)
-        agent_info_dict = get_agent_details_by_agent_uid(self.agent_uid)
-
-        return {**agent_configuration, **agent_info_dict}
-
-    async def process_license_plate(self, recognizer: LicensePlateRecognizer) -> dict:
-        await recognizer.recognize_license_plate()
+    async def process_herb(self, herb_processor: AbstractProcessor) -> dict:
+        await herb_processor.process_herb_harvest()

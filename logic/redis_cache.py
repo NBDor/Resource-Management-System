@@ -1,7 +1,6 @@
 from config.constants import DATA_CACHE_EXPIRATION
 from config.settings import app_settings
-from config.redis_keys import get_gps_key, get_camera_key
-from models import Camera
+from config.redis_keys import get_gps_key, get_equipment_key
 from redis import Redis
 from typing import Any, Awaitable, Callable, Dict, Optional, Union
 
@@ -23,29 +22,29 @@ class RedisService:
             self.redis.close()
         return result
 
-    def get_cached_agent_info(self, agent_uid: str) -> Optional[Dict[str, float]]:
-        agent_cache_info = self.redis.get(get_gps_key(agent_uid), default={})
-        return agent_cache_info
+    def get_cached_harvester_info(self, harvester_uid: str) -> Optional[Dict[str, float]]:
+        harvester_cache_info = self.redis.get(get_gps_key(harvester_uid), default={})
+        return harvester_cache_info
 
-    def get_cached_camera(self, camera_number: str, agent_uid: str) -> Optional[Dict[str, float]]:
-        return self.redis.get(get_camera_key(camera_number, agent_uid))
+    def get_cached_equipment(self, equipment_number: str, harvester_uid: str) -> Optional[Dict[str, float]]:
+        return self.redis.get(get_equipment_key(equipment_number, harvester_uid))
 
-    def set_cached_camera(
+    def set_cached_equipment(
         self,
-        camera_number: str,
-        agent_uid: str,
-        pickled_camera: str,
+        equipment_number: str,
+        harvester_uid: str,
+        pickled_equipment: str,
         expiry_time: int = DATA_CACHE_EXPIRATION,
     ) -> Response:
         return self.redis.set(
-            get_camera_key(camera_number, agent_uid), pickled_camera, ex=expiry_time
+            get_equipment_key(equipment_number, harvester_uid), pickled_equipment, ex=expiry_time
         )
 
 
-def get_cached_agent_info(agent_uid: str) -> Optional[Dict[str, float]]:
+def get_cached_harvester_info(harvester_uid: str) -> Optional[Dict[str, float]]:
     redis = Redis(host=app_settings.REDIS_HOST, port=app_settings.REDIS_PORT)
     redis.select(app_settings.REDIS_DB_INDEX)
-    agent_gps_key = get_gps_key(agent_uid)
-    agent_cache_info = redis.get(agent_gps_key, default={})
+    harvester_gps_key = get_gps_key(harvester_uid)
+    harvester_cache_info = redis.get(harvester_gps_key, default={})
     redis.close()
-    return agent_cache_info
+    return harvester_cache_info
