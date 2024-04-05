@@ -1,6 +1,6 @@
 from config.constants import IS_SUPERUSER, USER_UID
 from config.settings import app_settings
-from integrations.mgmt_actions import get_query_by_user_agents
+from integrations.mgmt_actions import get_query_by_user_harvesters
 from models import Base
 from sqlalchemy.orm import Session
 from typing import Optional, List
@@ -48,5 +48,5 @@ class BaseCrud:
     async def get_base_query_factory(self, db: Session, db_model: Base, token: dict) -> None:
         base_query = db.query(db_model)
         if not token[IS_SUPERUSER]:
-            base_query = await get_query_by_user_agents(token[USER_UID], base_query, db_model)
+            base_query = await get_query_by_user_harvesters(token[USER_UID], base_query, db_model)
         return base_query
