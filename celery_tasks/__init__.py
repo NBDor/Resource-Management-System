@@ -1,0 +1,1 @@
+from celery_tasks.license_plate_tasks import classify_new_plate
