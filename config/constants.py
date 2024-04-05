@@ -17,8 +17,8 @@ TG = "Terra-Gather"
 PH = "Phyto-Harvest"
 
 # HerbTech Harvesting
-HERBTECH_HARVESTER = "harvest"
-HERBTECH_HEARTBEAT = "keep_alive"
+HERBTECH_HARVESTER = f"{HC}-harvest"
+HERBTECH_HEARTBEAT = f"{HC}-keep_alive"
 DATA_TYPE = "data_type"
 HARVESTER_UID = "harvester_uid"
 EQUIPMENT_ID = "equipment_id"

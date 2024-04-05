@@ -4,6 +4,7 @@ from config.redis_keys import (
     get_harvester_matching_details_key,
 )
 from config.settings import app_settings
+from fastapi import HTTPException, status
 from models import Base
 from sqlalchemy.orm import Session
 from typing import Optional, Union
@@ -35,7 +36,7 @@ async def get_users_query_dict(user_uid) -> dict:
     user_queries_dict = (
         pickle.loads(cache_dict)
         if cache_dict
-        else await get_dict_from_mgmt(user_uid, "user-queries-dict")
+        else await get_dict_from_manage_service(user_uid, "user-queries-dict")
     )
 
     return user_queries_dict
@@ -51,13 +52,13 @@ def get_harvester_details_by_harvester_uid(harvester_uid: str) -> str:
     device_matching_settings = (
         cache_dict
         if cache_dict
-        else get_info_from_mgmt_by_harvester_uid(harvester_uid, "harvester-related-info")
+        else get_info_from_manage_service_by_harvester_uid(harvester_uid, "harvester-related-info")
     )
 
     return device_matching_settings
 
 
-async def get_harvester_configuration(harvester_uid: str) -> Union[dict, None]:
+async def get_harvester_configurations(harvester_uid: str) -> Union[dict, None]:
     harvester_config_key = get_harvester_config_key(harvester_uid)
     redis = Redis(host=app_settings.REDIS_HOST, port=app_settings.REDIS_PORT)
     redis.select(app_settings.REDIS_DB_INDEX)
@@ -67,51 +68,34 @@ async def get_harvester_configuration(harvester_uid: str) -> Union[dict, None]:
     harvester_config = (
         cached_configuration
         if cached_configuration is not None
-        else get_info_from_mgmt_by_harvester_uid(harvester_uid, "harvester-configuration")
+        else get_info_from_manage_service_by_harvester_uid(harvester_uid, "harvester-configuration")
     )
     return harvester_config
 
 
-async def get_dict_from_mgmt(user_uid: str, mgmt_action: str) -> Optional[str]:
-    """
-    This method asks the management service for the related harvester's information.
-    """
-    url = f"http://{app_settings.MGMT_SERVICE_HOST}:{app_settings.MGMT_SERVICE_PORT}/api/v1/{mgmt_action}/{user_uid}"
+async def get_dict_from_manage_service(user_uid: str, manage_action: str) -> Optional[dict]:
+    url = f"http://{app_settings.MANAGE_SERVICE_HOST}:{app_settings.MANAGE_SERVICE_PORT}/api/v1/{manage_action}/{user_uid}"
+    send_request_to_manage_service(url, f"Failed to get user | User UID: {user_uid}")
+
+def get_info_from_manage_service_by_harvester_uid(harvester_uid: str, manage_action: str) -> Optional[dict]:
+    if app_settings.TESTING:
+        return {"harvester_configurations": {"brand": "Test Brand"}}
+    url = f"http://{app_settings.MANAGE_SERVICE_HOST}:{app_settings.MANAGE_SERVICE_PORT}/api/v1/{manage_action}/{harvester_uid}"
+    send_request_to_manage_service(url, f"Failed to get harvester | harvester UID: {harvester_uid}")
+
+def get_info_from_manage_service_by_project_id(project_id: str, manage_action: str) -> Optional[dict]:
+    url = f"http://{app_settings.MANAGE_SERVICE_HOST}:{app_settings.MANAGE_SERVICE_PORT}/api/v1/{manage_action}/{project_id}"
+    return send_request_to_manage_service(url, f"Failed to get project | Project ID: {project_id}")
+
+def send_request_to_manage_service(url: str, error_message: str) -> Optional[str]:
     response = requests.get(url=url)
-    if response.status_code != 200:
+    if response.status_code != status.HTTP_200_OK:
         logging.error(
-            f"[MGMT REQUEST] Failed to get user | User UID: {user_uid} | Response: {response.status_code}"
+            f"[MANAGE REQUEST] {error_message} | Response: {response.status_code}"
         )
-        raise Exception(f"Failed to get user | User UID: {user_uid}")
-    else:
-        return response.json()
-
-
-def get_info_from_mgmt_by_harvester_uid(harvester_uid: str, mgmt_action: str) -> Optional[str]:
-    """
-    This method asks the management service for the related harvester's information.
-    """
-    url = f"http://{app_settings.MGMT_SERVICE_HOST}:{app_settings.MGMT_SERVICE_PORT}/api/v1/{mgmt_action}/{harvester_uid}"
-    response = requests.get(url=url)
-    if response.status_code != 200:
-        logging.error(
-            f"[MGMT REQUEST] Failed to get harvester | harvester UID: {harvester_uid} | Response: {response.status_code}"
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=error_message
         )
-        raise Exception(f"Failed to get harvester | harvester UID: {harvester_uid}")
-    else:
-        return response.json()
-
-
-def get_info_from_mgmt_by_project_id(project_id: str, mgmt_action: str) -> Optional[str]:
-    """
-    This method asks the management service for the related project's information.
-    """
-    url = f"http://{app_settings.MGMT_SERVICE_HOST}:{app_settings.MGMT_SERVICE_PORT}/api/v1/{mgmt_action}/{project_id}"
-    response = requests.get(url=url)
-    if response.status_code != 200:
-        logging.error(
-            f"[MGMT REQUEST] Failed to get project | Project ID: {project_id} | Response: {response.status_code}"
-        )
-        raise Exception(f"Failed to get project | Project ID: {project_id}")
     else:
         return response.json()

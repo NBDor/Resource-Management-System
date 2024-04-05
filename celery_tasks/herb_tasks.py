@@ -13,6 +13,4 @@ def classify_processed_herb(self, herb_data: dict):
         "task_name": CLASSIFY_PROCESSED_HERB,
         "UUID": herb_data['UUID'],
     }
-    print(f"lp_data: {herb_data}")
-
     return self.request.task

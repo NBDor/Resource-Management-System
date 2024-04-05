@@ -13,9 +13,9 @@ class EquipmentCrud(BaseCrud):
         db: Session,
         equipment_number: str,
         harvester_uid: str,
-        token: dict,
     ) -> Optional[Equipment]:
-        self.base_query = await self.get_base_query_factory(db, Equipment, token)
+        self.base_query = db.query(Equipment)
+
         self.redis = RedisService()
         cached_equipment = self.redis(
             RedisService.get_cached_equipment, equipment_number, harvester_uid, close_connection=False

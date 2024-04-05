@@ -9,12 +9,11 @@ from celery_tasks.herb_tasks import classify_processed_herb
 
 
 class HerbTechProcessor:
-    def __init__(self, incoming_harvest: HerbTechHarvest, db: Session, token_payload: dict) -> None:
+    def __init__(self, incoming_harvest: HerbTechHarvest, db: Session) -> None:
         self.herb_harvest = incoming_harvest
         self.db = db
         self.herb_crud = HerbCrud(Herb)
         self.equipment_crud = EquipmentCrud(Equipment)
-        self.token = token_payload
 
     async def process_herb_harvest(self) -> None:
         """
@@ -27,8 +26,6 @@ class HerbTechProcessor:
         db_herb = self.herb_crud.create_model(
             db=self.db, create_schema=herb_schema
         )
-
-        print(f"db_herb: {db_herb}")
 
         # herb_data = self.get_herb_data_for_classification(herb_in_db)
 
@@ -57,7 +54,7 @@ class HerbTechProcessor:
 
     async def get_related_equipment(self) -> Equipment:
         equipment = await self.equipment_crud.get_equipment_by_number_and_harvester(
-            self.db, self.herb_harvest.equipment_number, self.herb_harvest.harvester_uid, token=self.token
+            self.db, self.herb_harvest.equipment_number, self.herb_harvest.harvester_uid
         )
         return equipment
 

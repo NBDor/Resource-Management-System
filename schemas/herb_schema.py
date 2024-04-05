@@ -13,7 +13,7 @@ class HerbCreate(HerbBase):
     uuid: str = Field(alias="herb_uuid")
     harvester_uid: str
     equipment: EquipmentInDB
-    harvest_time: datetime = Field(alias="live_capture_timestamp")
+    harvest_time: datetime = Field(alias="harvest_timestamp")
     gps_location: str
     region: str
     herb_type: str
@@ -22,9 +22,9 @@ class HerbCreate(HerbBase):
 
     model_config = ConfigDict(validate_assignment=True)
 
-    @field_validator('live_capture_time', mode='before')
-    def val_live_capture_time(cls, live_capture_timestamp: float) -> datetime:
-        return convert_timestamp_to_datetime(live_capture_timestamp)
+    @field_validator('harvest_time', mode='before')
+    def val_harvest_time(cls, harvest_timestamp: float) -> datetime:
+        return convert_timestamp_to_datetime(harvest_timestamp)
 
     def update(self, **new_data):
         for field, value in new_data.items():

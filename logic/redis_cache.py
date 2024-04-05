@@ -1,6 +1,6 @@
 from config.constants import DATA_CACHE_EXPIRATION
 from config.settings import app_settings
-from config.redis_keys import get_gps_key, get_equipment_key
+from config.redis_keys import get_equipment_key
 from redis import Redis
 from typing import Any, Awaitable, Callable, Dict, Optional, Union
 
@@ -22,10 +22,6 @@ class RedisService:
             self.redis.close()
         return result
 
-    def get_cached_harvester_info(self, harvester_uid: str) -> Optional[Dict[str, float]]:
-        harvester_cache_info = self.redis.get(get_gps_key(harvester_uid), default={})
-        return harvester_cache_info
-
     def get_cached_equipment(self, equipment_number: str, harvester_uid: str) -> Optional[Dict[str, float]]:
         return self.redis.get(get_equipment_key(equipment_number, harvester_uid))
 
@@ -39,12 +35,3 @@ class RedisService:
         return self.redis.set(
             get_equipment_key(equipment_number, harvester_uid), pickled_equipment, ex=expiry_time
         )
-
-
-def get_cached_harvester_info(harvester_uid: str) -> Optional[Dict[str, float]]:
-    redis = Redis(host=app_settings.REDIS_HOST, port=app_settings.REDIS_PORT)
-    redis.select(app_settings.REDIS_DB_INDEX)
-    harvester_gps_key = get_gps_key(harvester_uid)
-    harvester_cache_info = redis.get(harvester_gps_key, default={})
-    redis.close()
-    return harvester_cache_info

@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     IMAGES_URL_PREFIX: str = os.getenv(
         "IMAGES_URL_PREFIX", f"https://{BUCKET_NAME}.s3.{REGION}.amazonaws.com"
     )
+    TESTING: bool = os.getenv("TESTING", True)
 
 
 app_settings = Settings()

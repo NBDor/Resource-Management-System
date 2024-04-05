@@ -1,6 +1,7 @@
+from config.constants import DEFAULT_MIN_CHEMICAL_ANALYSIS_VALUE
+from fastapi import HTTPException, status
 from pydantic import BaseModel, Field, field_validator, model_validator, computed_field
 from typing import Optional, List
-from config.constants import DEFAULT_MIN_CHEMICAL_ANALYSIS_VALUE
 
 from log.logger import logger as logging
 
@@ -35,10 +36,8 @@ class HarvesterConfiguration(BaseModel):
 
 class HerbTechHarvest(BaseModel):
     data_type: str
-    version: int
     harvest_timestamp: float = Field(alias="epoch_start")
     epoch_end: int
-    company_id: str
     harvester_uid: str
     harvester_type: str
     equipment_number: str
@@ -50,12 +49,9 @@ class HerbTechHarvest(BaseModel):
     country: str
     crop_jpeg: Optional[str] = None
     optimal_herb: OptimalHerb
-    best_confidence: float
-    best_region: str
-    best_region_confidence: float
 
     # Extra data
-    harvester_configuration: HarvesterConfiguration
+    harvester_configurations: HarvesterConfiguration
 
     @field_validator("harvest_timestamp", mode="before")
     @classmethod
@@ -71,7 +67,7 @@ class HerbTechHarvest(BaseModel):
     def data_validation(self):
         chemical_analysis_must_reach_company_standards(
             self.chemical_analysis,
-            self.harvester_configuration.min_chemical_analysis_value
+            self.harvester_configurations.min_chemical_analysis_value
         )
         return self
 
@@ -81,4 +77,7 @@ def chemical_analysis_must_reach_company_standards(chemical_analysis: float, com
         logging.error(
             f"{log_message} | Herb chemical analysis: {chemical_analysis} | Company standard: {company_standard}"
         )
-        raise ValueError("Herb filtered out due to insufficient chemical analysis")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=log_message,
+        )
