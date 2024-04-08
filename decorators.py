@@ -18,7 +18,7 @@ def base_query_factory(db_model: Base) -> None:
     def decorator(func):
         @functools.wraps(func)
         def wrapper_decorator(self, *args, **kwargs):
-            token = kwargs["token"]
+            token = kwargs["token_payload"]
             db = kwargs["db"]
 
             self.base_query = db.query(db_model)

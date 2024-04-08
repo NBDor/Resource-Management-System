@@ -5,6 +5,8 @@ class EquipmentBase(BaseModel):
     number: str
     harvester_uid: str
     name: str
+    project_uuid: str
+    company_uuid: str
 
 
 class EquipmentCreate(EquipmentBase):
