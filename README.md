@@ -29,5 +29,12 @@ celery -A app.celery worker --beat --loglevel=info
 - Run the FastAPI application in another terminal:
 uvicorn app.main:app --reload
 
+<div style="text-align: center;">
+![Swagger Current State](Screenshot 2024-04-09 at 12.22.12.png)
+</div>
+
+
+
+
 License
 This project is licensed under the MIT License.
