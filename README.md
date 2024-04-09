@@ -1,4 +1,4 @@
-Introduction:
+<img width="1570" alt="Swagger_Current_State" src="https://github.com/NBDor/Resource-Management-System/assets/39236325/7fbdaea4-22ed-4e4f-91f9-36d56e49cf5d">Introduction:
 
 The Resource Management System is a FastAPI-based application that manages the processing and classification of various resources, including herbs, minerals, and wood. The system is designed to handle the acquisition of raw resources from separate sources, process them, and store them in a database. Additionally, the system acts as a classifier, determining the appropriate processing steps for incoming resources based on client specifications and input data evaluation.
 
@@ -30,7 +30,7 @@ celery -A app.celery worker --beat --loglevel=info
 uvicorn app.main:app --reload
 
 <div style="text-align: center;">
-![Swagger Current State](Screenshot 2024-04-09 at 12.22.12.png)
+![Swagger Current State](Swagger_Current_State.png)
 </div>
 
 
