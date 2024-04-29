@@ -14,19 +14,23 @@ import pickle
 from log.logger import logger as logging
 
 
-async def get_user_harvesters_by_user_uid(user_uid: str) -> list:
-    user_queries_dict = await get_users_query_dict(user_uid)
-    return user_queries_dict["user_harvesters"]
-
 
 async def get_query_by_user_harvesters(
     user_uid: str, base_query: Session.query, db_model: Base
 ) -> Session.query:
-    harvester_uids = await get_user_harvesters_by_user_uid(user_uid)
+    harvester_uids = get_user_harvesters_by_user_uid(user_uid)
     return base_query.filter(db_model.harvester_uid.in_(harvester_uids))
 
 
-async def get_users_query_dict(user_uid) -> dict:
+def get_user_harvesters_by_user_uid(user_uid: str) -> list:
+    if app_settings.TESTING:
+        return ["test_harvester_uid"]
+
+    user_queries_dict = get_users_query_dict(user_uid)
+    return user_queries_dict["user_harvesters"]
+
+
+def get_users_query_dict(user_uid) -> dict:
     user_key = f":1:{get_users_queries_key(user_uid)}"
     redis = Redis(host=app_settings.REDIS_HOST, port=app_settings.REDIS_PORT)
     redis.select(app_settings.REDIS_DB_INDEX)
@@ -36,7 +40,7 @@ async def get_users_query_dict(user_uid) -> dict:
     user_queries_dict = (
         pickle.loads(cache_dict)
         if cache_dict
-        else await get_dict_from_manage_service(user_uid, "user-queries-dict")
+        else get_dict_from_manage_service(user_uid, "user-queries-dict")
     )
 
     return user_queries_dict
@@ -73,7 +77,7 @@ async def get_harvester_configurations(harvester_uid: str) -> Union[dict, None]:
     return harvester_config
 
 
-async def get_dict_from_manage_service(user_uid: str, manage_action: str) -> Optional[dict]:
+def get_dict_from_manage_service(user_uid: str, manage_action: str) -> Optional[dict]:
     url = f"http://{app_settings.MANAGE_SERVICE_HOST}:{app_settings.MANAGE_SERVICE_PORT}/api/v1/{manage_action}/{user_uid}"
     send_request_to_manage_service(url, f"Failed to get user | User UID: {user_uid}")
 
