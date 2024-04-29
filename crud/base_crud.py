@@ -1,23 +1,18 @@
 from config.constants import IS_SUPERUSER, USER_UID
 from config.settings import app_settings
+from decorators import check_permissions, user_harvesters_factory
+from fastapi import Request
 from integrations.mgmt_actions import get_query_by_user_harvesters
 from models import Base
+from permissions.basic_permission import BasicCrudPermission
 from sqlalchemy.orm import Session
-from typing import Optional, List
+from typing import Dict, Optional, List
 
 
 class BaseCrud:
     def __init__(self, current_model: Base) -> None:
         self.model = current_model
         self.page_size = app_settings.PAGE_SIZE
-
-    def get_model_instance(self, db: Session, model_id: int) -> Optional[Base]:
-        return db.query(self.model).filter(self.model.id == model_id).first()
-
-    def get_model_list(
-        self, db: Session, skip: int = 0, limit: int = app_settings.PAGE_SIZE
-    ) -> List[Base]:
-        return db.query(self.model).offset(skip).limit(limit).all()
 
     def create_model(self, db: Session, create_schema) -> Base:
         db_instance = self.model(**create_schema.model_dump(exclude_unset=True))
@@ -26,8 +21,28 @@ class BaseCrud:
         db.refresh(db_instance)
         return db_instance
 
-    def update_model(self, db: Session, id: int, update_schema) -> Optional[Base]:
-        db_instance = self.get_model_instance(db, id)
+    @user_harvesters_factory
+    @check_permissions(BasicCrudPermission, method="GET")
+    def get_model_instance(
+            self,
+            db: Session,
+            model_id: int,
+            token_payload: dict = None
+    ) -> Optional[Base]:
+        return db.query(self.model).filter(self.model.id == model_id).first()
+
+    def get_model_list(
+            self,
+            skip: int = 0,
+            limit: int = app_settings.PAGE_SIZE
+    ) -> Dict[int, List[Base]]:
+        return {
+            "count": self.base_query.count(),
+            "results": self.base_query.order_by(self.model.id).offset(skip).limit(limit).all()
+        }
+
+    def update_model(self, db: Session, model_id: int, update_schema) -> Optional[Base]:
+        db_instance = self.get_model_instance(db, model_id)
         if not db_instance:
             return None
         update_data = update_schema.model_dump(exclude_unset=True)
