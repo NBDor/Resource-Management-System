@@ -41,11 +41,7 @@ def create_new_equipment(
     db: Session = Depends(get_db),
     token_payload = Depends(decode_access_token)
 ):
-    if token_payload[IS_SUPERUSER] or token_payload[ROLE] in [OWNER, ADMINISTRATOR]:
-        return equipment_crud.create_model(db=db, create_schema=equipment)
-    else:
-        response.status_code = status.HTTP_403_FORBIDDEN
-        return ErrorResponse(error=USER_FORBIDDEN)
+    return equipment_crud.create_model(db=db, create_schema=equipment)
 
 
 @router.get("/", response_model=Union[EquipmentsList, ErrorResponse], status_code=status.HTTP_200_OK)

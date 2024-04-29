@@ -16,7 +16,7 @@ int_pk = Annotated[int, mapped_column(Integer, primary_key=True, index=True)]
 uuid_36 = Annotated[Uuid, mapped_column(Uuid, nullable=False, index=True, unique=False)]
 str_50 = Annotated[str, mapped_column(String(50), nullable=False)]
 str_26_indexed = Annotated[str, mapped_column(String(26), nullable=False, index=True)]
-str_50_indexed = Annotated[str, mapped_column(String(50), nullable=False, index=True)]
+str_50_indexed = Annotated[str, mapped_column(String(50), nullable=False, index=True, unique=True)]
 
 
 class Base(BaseDBModel):
@@ -29,7 +29,7 @@ class Herb(Base):
 
     id = mapped_column(Integer, primary_key=True, index=True)
     uuid: Mapped[uuid_36]
-    harvester_uid: Mapped[str_50] = mapped_column(String, index=True)
+    harvester_uid: Mapped[str_50_indexed] = mapped_column(String, index=True)
     equipment_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("equipment.id", ondelete="CASCADE"), index=True, nullable=False
     )

@@ -7,7 +7,8 @@ class EquipmentBase(BaseModel):
     harvester_uid: str
 
 class EquipmentCreate(EquipmentBase):
-    pass
+    project_uuid: UUID4
+    company_uuid: UUID4
 
 
 class EquipmentUpdate(EquipmentBase):
@@ -16,8 +17,6 @@ class EquipmentUpdate(EquipmentBase):
 
 class EquipmentInDB(EquipmentBase):
     id: int
-    project_uuid: UUID4
-    company_uuid: UUID4
 
     model_config = ConfigDict(from_attributes=True)
 

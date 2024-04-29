@@ -1,5 +1,5 @@
 from config.constants import IS_SUPERUSER, USER_UID, USER_FORBIDDEN, ROLE
-from fastapi import HTTPException, status, Request
+from fastapi import HTTPException, status
 import functools
 from schemas.general_schema import ErrorResponse
 from integrations.mgmt_actions import (
@@ -24,11 +24,15 @@ def exception_handler(custom_error_message: str=None):
             try:
                 response = kwargs["response"]
                 return func(*args, **kwargs)
-            
+
             except IntegrityError as err:
-                logging.error(f"{custom_error_message} | Error - {err.orig} \n {traceback.format_exc()}")
-                response.status_code = status.HTTP_400_BAD_REQUEST
-                error = custom_error_message
+                if "duplicate key value violates unique constraint" in str(err.orig):
+                    response.status_code = status.HTTP_409_CONFLICT
+                    error = "Duplicate key value violates unique constraint"
+                else:
+                    logging.error(f"{custom_error_message} | Error - {err.orig} \n {traceback.format_exc()}")
+                    response.status_code = status.HTTP_400_BAD_REQUEST
+                    error = custom_error_message
 
             except PermissionError as err:
                 logging.error(f"{custom_error_message} | Error - {err} \n {traceback.format_exc()}")
