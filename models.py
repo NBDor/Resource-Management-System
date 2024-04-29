@@ -20,7 +20,8 @@ str_50_indexed = Annotated[str, mapped_column(String(50), nullable=False, index=
 
 
 class Base(BaseDBModel):
-    pass
+    def get_harvester_uid(self, db, model_id):
+        return None
 
 
 class Herb(Base):
@@ -43,6 +44,8 @@ class Herb(Base):
     herb_color: Mapped[str_50] = mapped_column(String, nullable=True, index=True)
     herb_image: Mapped[int] = mapped_column(Integer, nullable=True)
 
+    def get_harvester_uid(self, db, model_id):
+        return db.query(Herb.harvester_uid).filter(Herb.id == model_id).scalar()
 
 class Equipment(Base):
     __tablename__ = "equipment"
@@ -56,3 +59,9 @@ class Equipment(Base):
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+    
+    def field_value_to_str(self, field_name: str) -> str:
+        return str(getattr(self, field_name))
+    
+    def get_harvester_uid(self, db, model_id):
+        return db.query(Equipment.harvester_uid).filter(Equipment.id == model_id).scalar()
