@@ -31,15 +31,3 @@ DATA_CACHE_EXPIRATION = 1800
 
 # Herb Classification
 CLASSIFY_PROCESSED_HERB = "Classify_Processed_Herb"
-
-
-OPENING_LINE = "Each model field supports the following filters: "
-FILTERS = "['exact', 'in', 'icontains']"
-EXAMPLES = "<br><br>For example:"
-START_OF_LIST = "<ul>"
-END_OF_LIST = "</ul>"
-ICONTAINS_EXAMPLE = "<li><strong>'?field_name__icontains=123'</strong> will return all instances that contain 123 in the field</li><br>"
-IN_EXAMPLE = "<li><strong>'?field_name__in=[1, 2, 3]'</strong> will return all instances that their field value equals to 1, 2 or 3</li><br>"
-EXACT_EXAMPLE = "<li><strong>'?field_name__exact=123'</strong> will return all instances that their field value equals to 123</li><br>"
-
-COMMON_DESCRIPTION = f"{OPENING_LINE}{FILTERS}{EXAMPLES}{START_OF_LIST}{ICONTAINS_EXAMPLE}{IN_EXAMPLE}{EXACT_EXAMPLE}{END_OF_LIST}"
