@@ -1,4 +1,4 @@
-from config.constants import OWNER, ADMINISTRATOR
+from config.constants import OWNER, ADMINISTRATOR, GET, POST, PATCH, DELETE
 from typing import List
 
 class BasicPermission():
@@ -33,15 +33,11 @@ class BasicCrudPermission(BasicPermission):
         if super().has_permission():
             return True
 
-        if self.method == "GET":
+        if self.method == GET:
             if self.model_harvester_uid in self.user_harvesters:
                 return True
-        elif self.method == "POST":
+        elif self.method == POST or self.method == PATCH or self.method == DELETE:
             if self.role in [OWNER, ADMINISTRATOR]:
                 return True
-        elif self.method == "PATCH":
-            pass
-        elif self.method == "DELETE":
-            pass
 
         return False

@@ -1,7 +1,6 @@
-from config.constants import IS_SUPERUSER, USER_UID
+from config.constants import IS_SUPERUSER, USER_UID, GET, PATCH, DELETE
 from config.settings import app_settings
 from decorators import check_permissions, user_harvesters_factory
-from fastapi import Request
 from integrations.mgmt_actions import get_query_by_user_harvesters
 from models import Base
 from permissions.basic_permission import BasicCrudPermission
@@ -22,7 +21,7 @@ class BaseCrud:
         return db_instance
 
     @user_harvesters_factory
-    @check_permissions(BasicCrudPermission, method="GET")
+    @check_permissions(BasicCrudPermission, method=GET)
     def get_model_instance(
             self,
             db: Session,
@@ -41,8 +40,16 @@ class BaseCrud:
             "results": self.base_query.order_by(self.model.id).offset(skip).limit(limit).all()
         }
 
-    def update_model(self, db: Session, model_id: int, update_schema) -> Optional[Base]:
-        db_instance = self.get_model_instance(db, model_id)
+    @user_harvesters_factory
+    @check_permissions(BasicCrudPermission, method=PATCH)
+    def update_model(
+        self,
+        db: Session,
+        model_id: int,
+        update_schema,
+        token_payload: dict = None,
+    ) -> Optional[Base]:
+        db_instance = self.get_model_instance(db, model_id, token_payload)
         if not db_instance:
             return None
         update_data = update_schema.model_dump(exclude_unset=True)
@@ -52,13 +59,15 @@ class BaseCrud:
         db.refresh(db_instance)
         return db_instance
 
-    def delete_model(self, db: Session, model_id: int) -> bool:
-        db_instance = self.get_model_instance(db, model_id)
-        if not db_instance:
-            return False
-        db.delete(db_instance)
-        db.commit()
-        return True
+    @user_harvesters_factory
+    @check_permissions(BasicCrudPermission, method=DELETE)
+    def delete_model(self, db: Session, model_id: int, token_payload: dict = None) -> bool:
+        db_instance = self.get_model_instance(db, model_id, token_payload)
+        if db_instance:
+            db.delete(db_instance)
+            db.commit()
+            return True
+        return False
 
     async def get_base_query_factory(self, db: Session, db_model: Base, token: dict) -> None:
         base_query = db.query(db_model)

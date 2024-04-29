@@ -41,25 +41,39 @@ class EquipmentCrud(BaseCrud):
         return super().get_model_list(skip, limit)
 
 
-    def update_model(self, db: Session, model_id: int, update_schema, token_payload: dict = None):
-        db_instance = self.get_model_instance(db, model_id, token_payload=token_payload)
-        if not db_instance:
-            return None
-        update_data = update_schema.model_dump(exclude_unset=True)
-        for key, value in update_data.items():
-            setattr(db_instance, key, value)
-        db.commit()
-        db.refresh(db_instance)
+    def update_model(
+            self,
+            db: Session,
+            model_id: int,
+            update_schema,
+            token_payload: dict = None,
+    ):
+        db_instance = super().update_model(
+            db=db,
+            model_id=model_id,
+            update_schema=update_schema,
+            token_payload=token_payload,
+        )
+        if db_instance is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=EQUIPMENT_NOT_FOUND,
+            )
         return db_instance
 
 
     def delete_model(self, db: Session, model_id: int, token_payload: dict = None) -> bool:
-        db_instance = self.get_model_instance(db, model_id, token_payload=token_payload)
-        if not db_instance:
-            return False
-        db.delete(db_instance)
-        db.commit()
-        return True
+        success = super().delete_model(
+            db=db,
+            model_id=model_id,
+            token_payload=token_payload,
+        )
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=EQUIPMENT_NOT_FOUND,
+            )
+        return success
 
 
     def filter_query_by_harvester_uids(self, harvester_uids: List[str]) -> None:

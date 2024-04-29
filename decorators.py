@@ -83,17 +83,15 @@ def base_query_factory(db_model: Base) -> None:
 def user_harvesters_factory(func):
     @functools.wraps(func)
     def wrapper_decorator(self, *args, **kwargs):
-        token = kwargs.get("token_payload", None)
-        if not token:
-            token = args[2]
+        token_payload = kwargs.get("token_payload", None)
 
         self.user_harvesters = []
         self.is_superuser = False
 
-        if token[IS_SUPERUSER]:
+        if token_payload[IS_SUPERUSER]:
             self.is_superuser = True
         else:
-            self.user_harvesters = get_user_harvesters_by_user_uid(token[USER_UID])
+            self.user_harvesters = get_user_harvesters_by_user_uid(token_payload[USER_UID])
         value = func(self, *args, **kwargs)
 
         return value

@@ -9,6 +9,12 @@ VIEWER = "viewer"
 USER_UID = "user_uid"
 ROLE = "role"
 
+# Request Methods
+GET = "GET"
+POST = "POST"
+PATCH = "PATCH"
+DELETE = "DELETE"
+
 EARLIEST_DATE = "2000-01-01T10:10:10Z"
 
 USER_FORBIDDEN = "User is not allowed to perform this action"

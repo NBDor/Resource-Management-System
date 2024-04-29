@@ -1,5 +1,5 @@
 from pydantic import BaseModel, UUID4, ConfigDict
-from typing import List
+from typing import Optional, List
 
 class EquipmentBase(BaseModel):
     number: str
@@ -12,7 +12,11 @@ class EquipmentCreate(EquipmentBase):
 
 
 class EquipmentUpdate(EquipmentBase):
-    pass
+    number: Optional[str] = None
+    name: Optional[str] = None
+    harvester_uid: Optional[str] = None
+    project_uuid: Optional[UUID4] = None
+    company_uuid: Optional[UUID4] = None
 
 
 class EquipmentInDB(EquipmentBase):
